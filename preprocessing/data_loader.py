@@ -17,11 +17,11 @@ def find_statistics(filepath=None):
         sp_data = each.split("  ")
 
 x = _gaf20iterator(open("../data/goa_uniprot_all_noiea.gaf", 'r'))
-go_id = []
+go_id = set()
 for each in x:
     for every in each["DB:Reference"]:
         if "PMID" in every :
-            go_id.append(each)
+            go_id.add(every)
 print(len(go_id))
 # find_statistics()
 
