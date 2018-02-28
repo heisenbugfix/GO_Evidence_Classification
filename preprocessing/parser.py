@@ -7,11 +7,6 @@ positive_pairs = []
 keys1 = []
 print(graph._adj.keys())
 for each in graph._adj:
-    if each=='GO:0000072':
-        print("OK")
-    if "is_obsolete" in graph._node[each]:
-        if graph._node[each]["is_obsolete"]:
-            continue
     keys1.append(each)
     node_dic = graph._adj[each]
     for every in node_dic:
