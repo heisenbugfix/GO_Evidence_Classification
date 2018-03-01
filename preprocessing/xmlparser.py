@@ -86,7 +86,7 @@ def parse_pubmed(data_dir):
     with open(OUTPUT_FILE, 'w') as output_handle:
         for fn in os.listdir(data_dir):
             if fn.endswith(".xml.gz"):
-                print(fn)
+                print(count,total,fn)
                 f = gzip.open(data_dir + os.sep + fn)
                 doc = ET.ElementTree(file=f)
                 root = doc.getroot()
@@ -96,7 +96,6 @@ def parse_pubmed(data_dir):
                     for pmid in elem.findall('.//MedlineCitation/PMID'):
                         if pmid.text in ref_pmid:
                             count+=1
-                            print (count)
                             article = Article()
                             # if elem.tag == "PubmedArticle":
                                 # We have an article, now parse it
@@ -124,5 +123,5 @@ def parse_pubmed(data_dir):
 
 
 
-parse_pubmed('abc')
+parse_pubmed('/home/twinkle/696oracle/abc')
 
