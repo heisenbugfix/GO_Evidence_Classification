@@ -2,7 +2,7 @@ import obonet
 import random
 import pickle as pkl
 
-graph = obonet.read_obo("go.obo")
+graph = obonet.read_obo("../data/go.obo")
 positive_pairs = []
 keys1 = []
 print(graph._adj.keys())
