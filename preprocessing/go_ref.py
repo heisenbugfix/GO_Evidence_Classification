@@ -30,14 +30,14 @@ for element in page_content.find_all():
 		name.append(name_box)
 #print (name)
 goref_kv = {}
-#goref_kv['GO_REF:0000004']=prices
+
 for n in name:
 	for paras in chunk(page_content.find(class_='block', id = n )):
 		val=('\n'.join(p.get_text() for p in paras))
 		#val=[p for p in paras]
 		goref_kv[n]=[val]   
 
-print(goref_kv['GO_REF:0000003'])
+#print(goref_kv['GO_REF:0000003'])
 
 
 
