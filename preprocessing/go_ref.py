@@ -1,7 +1,7 @@
 from collections import defaultdict
 from bs4 import BeautifulSoup
 import requests
-import urllib, json
+import pickle 
 
 #function: yields groups of <p> nodes separated by <div> siblings
 def chunk(parent):    
@@ -30,7 +30,7 @@ for element in page_content.find_all():
 		name.append(name_box)
 #print (name)
 goref_kv = {}
-
+#goref_kv['GO_REF:0000004']=prices
 for n in name:
 	for paras in chunk(page_content.find(class_='block', id = n )):
 		val=('\n'.join(p.get_text() for p in paras))
@@ -38,6 +38,11 @@ for n in name:
 		goref_kv[n]=[val]   
 
 #print(goref_kv['GO_REF:0000003'])
+
+with open('GO_REF.pickle', 'wb') as handle:
+	pickle.dump(goref_kv , handle, protocol=pickle.HIGHEST_PROTOCOL)
+
+
 
 
 
