@@ -2,15 +2,17 @@ import pickle as pkl
 import obonet
 import json
 import numpy as np
+import scipy as scp
 import re
 import string
+from gensim import models, corpora, matutils
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer
 from sklearn.linear_model.logistic import LogisticRegression
 from sklearn.preprocessing import OneHotEncoder
-from scipy.sparse import csr_matrix
+from scipy.sparse import csc_matrix, hstack, vstack
 
 labels = ["DB","DB_OID","DB_OBS",
           "Qualifier","GO_ID","DB_REF","EVIDENCE",
@@ -19,12 +21,23 @@ labels = ["DB","DB_OID","DB_OBS",
           "Annotation_EXT","Gene_PFID"]
 
 feature_labels = {"GO_ID", "DB_REF", "GO_PARENTS", "Aspect", "Taxon", "DB_OBSYN", "WITH"}
+stoplist = set('for a of the and to in'.split())
 regex = re.compile('[%s]' % re.escape(string.punctuation))
+port_stemmer = PorterStemmer()
 
 def load_pkl_data(filename):
     f = open(filename, 'rb')
     data = pkl.load(f)
     return data
+
+def save_json_data(filename, data):
+    with open(filename, 'w') as f:
+        json.dump(data, f)
+
+def save_pkl_data(filename, data):
+    with open(filename, 'wb') as f:
+        pkl.dump(data, f)
+
 
 def load_json_data(filename):
     f = open(filename)
@@ -41,11 +54,9 @@ def dump_to_json(filename, outfile=None):
             curr[label] = val
         data_dict.append(curr)
     if outfile is None:
-        with open("../data/all_data.json",'w') as f:
-            json.dump(data_dict, f)
-    else:
-        with open(outfile,'w') as f:
-            json.dump(data_dict, f)
+        outfile = "../data/all_data.json",'w'
+    with open(outfile,'w') as f:
+        json.dump(data_dict, f)
 
 def load_pubmed_text_data(filename=None):
     if not filename:
@@ -67,14 +78,6 @@ def dump_pubmed_json_fromtext(infile=None, outfile=None):
         with open(outfile, 'w') as f:
             json.dump(data,f, indent=2)
 
-def create_tfidf_data(text_list):
-    cvec = CountVectorizer()
-    Y = cvec.fit_transform(text_list)
-    tf_transformer = TfidfTransformer()
-    X_train_tfidf = tf_transformer.fit_transform(Y)
-    a = np.asarray(X_train_tfidf[1].todense()).flatten()
-    print(a)
-    print("OK")
 
 def create_go_term_vector(filename=None, dump=False):
     if not filename:
@@ -107,28 +110,30 @@ def get_parent_nodes(node, graph=None):
     return ans
 
 
-def create_training_data(data_filename, ontology_filename=None):
-    node_to_index, index_to_node = create_go_term_vector(ontology_filename)
-    json_data = load_json_data(data_filename)
-    lab = {"GO_ID", "DB_REF", "GO_PARENTS", "Aspect", "Taxon", "DB_OBSYN", "WITH"}
-    for point in json_data:
-        pass
-
-
-def collect_cleaned_goref_pubmed_data():
+def collect_cleaned_goref_pubmed_data(dump=False):
     with open("../data/GO_REF.pickle", 'rb') as f:
         gorefData = pkl.load(f)
     all_text = []
+    all_text_dict = {}
     for i, each in enumerate(gorefData):
-        if i > 19:
-            break
+        # if i > 19:
+        #     break
         text = gorefData[each]
         for line in text:
-            all_text.append(clean_text(line))
-    # pubmed_data = load_pubmed_text_data()
-    # for each in pubmed_data:
-    #     all_text.append(clean_text(pubmed_data[each]["abstract"]))
-    return all_text
+            line = clean_text(line)
+            all_text.append(line)
+            all_text_dict[each] = line
+    pubmed_data = load_pubmed_text_data()
+    for each in pubmed_data:
+        line = clean_text(pubmed_data[each]["abstract"])
+        all_text.append(line)
+        all_text_dict[each] = line
+    if dump:
+        with open("../data/all_abstract.pickle",'wb') as f:
+            pkl.dump(all_text, f)
+        with open("../data/all_abstract_withID.pickle", 'wb') as f:
+            pkl.dump(all_text_dict, f)
+    return all_text, all_text_dict
 
 
 def clean_text(line, stemming=False):
@@ -147,11 +152,117 @@ def clean_text(line, stemming=False):
             new_token = ' '.join(token)
         else:
             new_token = regex.sub(u'', token)
-        if not new_token == u'' and not new_token in stopwords.words('english'):
+        if not new_token == u'' and not new_token in stopwords.words('english') and new_token not in stoplist:
             if stemming:
-                new_token = PorterStemmer.stem(new_token)
+                new_token = port_stemmer.stem(new_token)
             new_line.append(new_token)
     return ' '.join(new_line)
 
-text_list = collect_cleaned_goref_pubmed_data()
-create_tfidf_data(text_list)
+def get_corpus(texts, dct=None):
+    # use a pre-saved dictionary for abstracts
+    if not dct:
+        dct = load_pkl_data("../data/dct.pickle")
+    corpus = [dct.doc2bow(line) for line in texts]
+    return corpus
+
+
+def get_tfidf_vectors_sparse(corpus, tfidf_model=None):
+    if not tfidf_model:
+        tfidf_model = load_pkl_data("../data/tfidf_model.pickle")
+    vectors = []
+    for i , each in enumerate(corpus):
+        vector = tfidf_model[corpus[i]]
+        vectors.append(vector)
+    scipy_csc_matrix = matutils.corpus2csc(vectors)
+    return scipy_csc_matrix.T
+
+
+def create_tfidf_model(documents=None, dump=False):
+    if not documents:
+        documents = load_pkl_data("../data/all_abstract.pickle")
+    texts = [[word for word in document.lower().split() if word not in stoplist]
+             for document in documents]
+    dct = corpora.Dictionary(texts)
+    corpus = [dct.doc2bow(line) for line in texts]  # convert dataset to BoW format
+    model = models.TfidfModel(corpus)  # fit model
+    if dump:
+        save_pkl_data("../data/dct.pickle", dct)
+        save_pkl_data("../data/tfidf_model.pickle", model)
+    return model
+
+
+def create_training_data(data_filename, ontology_filename=None):
+    node_to_index, index_to_node = create_go_term_vector(ontology_filename)
+    json_data = load_json_data(data_filename)
+    graph = obonet.read_obo("../data/go.obo")
+    abstract_data = load_pkl_data("../data/all_abstract_withID.pickle")
+    dct = load_pkl_data("../data/dct.pickle")
+    tfidf_model = load_pkl_data("../data/tfidf_model.pickle")
+    lab = {"GO_ID", "DB_REF", "GO_PARENTS", "Aspect", "Taxon", "DB_OBSYN", "WITH"}
+    Aspect = {"P":0, "F":1, "C":2}
+    features = []
+    for point in json_data:
+        #GO VECTOR
+        goterm = point["GO_ID"]
+        go_one_hot = np.zeros(len(node_to_index))
+        go_one_hot[node_to_index[goterm]] = 1.0
+        go_one_hot = csc_matrix(go_one_hot)
+        # ABSTRACT VECTOR
+        dbref = point["DB_REF"]
+        if "PMID" in dbref:
+            dbref = dbref.split(':')
+            dbref = dbref[1]
+        abstract = abstract_data[dbref]
+        abstract = [[word for word in abstract.lower().split() if word not in stoplist]]
+        corpus = get_corpus(abstract, dct)
+        abstract_vec = get_tfidf_vectors_sparse(corpus, tfidf_model)
+        feature = hstack([go_one_hot, abstract_vec])
+        #GO_PARENTS
+        parents = get_parent_nodes(goterm, graph)
+        parent_vec = np.zeros(len(node_to_index))
+        for each in parents:
+            parid =node_to_index[each]
+            parent_vec[parid] = 1.0
+        parent_vec = csc_matrix(parent_vec)
+        feature = hstack([feature, parent_vec])
+        #ASPECT:
+        aspect_one_hot = np.zeros(len(Aspect))
+        aspect_one_hot[Aspect[point["Aspect"]]] = 1.0
+        aspect_one_hot = csc_matrix(aspect_one_hot)
+        feature = hstack([feature, aspect_one_hot])
+        print("OK")
+
+
+
+
+# documents = load_pkl_data("../data/all_abstract.pickle")
+# texts = [[word for word in document.lower().split() if word not in stoplist]
+#           for document in documents]
+# corpus = get_corpus(texts)
+# vecs = get_tfidf_vectors_sparse(corpus)
+# create_go_term_vector()
+
+# create_training_data("../data/temp_data.json")
+
+
+# json_data = load_json_data("../data/all_data.json")
+# abstract_data = load_pkl_data("../data/all_abstract_withID.pickle")
+# count = 0
+# pcount = 0
+# temp_data = []
+# pmid_set_np = set()
+# pmid_set_p = set()
+# for point in json_data:
+#     dbref = point["DB_REF"]
+#     if "PMID" in dbref:
+#         dbref = dbref.split(':')
+#         dbref = dbref[1]
+#         try:
+#             abstract = abstract_data[dbref]
+#             pmid_set_p.add(dbref)
+#             temp_data.append(point)
+#         except:
+#             pmid_set_np.add(dbref)
+# print("NOT PRESENT ARE %d"%len(pmid_set_np))
+# print("PRESENT ARE %d"%len(pmid_set_p))
+# save_json_data("../data/temp_data.json", temp_data)
