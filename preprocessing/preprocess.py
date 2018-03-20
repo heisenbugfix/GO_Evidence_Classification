@@ -2,16 +2,12 @@ import pickle as pkl
 import obonet
 import json
 import numpy as np
-import scipy as scp
 import re
 import string
 from gensim import models, corpora, matutils
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
-from sklearn.feature_extraction.text import TfidfTransformer, CountVectorizer
-from sklearn.linear_model.logistic import LogisticRegression
-from sklearn.preprocessing import OneHotEncoder
 from scipy.sparse import csc_matrix, hstack, vstack
 
 labels = ["DB","DB_OID","DB_OBS",
@@ -19,6 +15,16 @@ labels = ["DB","DB_OID","DB_OBS",
           "WITH","Aspect","DB_OBN","DB_OBSYN",
           "DB_OBType","Taxon","Date", "Assigned_By",
           "Annotation_EXT","Gene_PFID"]
+
+evidence_codes = ["EXP", "IDA", "IPI",
+                  "IMP", "IGI", "IEP",
+                  "HTP", "HDA", "HMP",
+                  "HGI", "HEP",
+                  "ISS", "ISO", "ISA",
+                  "ISM", "IGC", "IBA",
+                  "IBD", "IKR", "IRD",
+                  "RCA", "TAS", "NAS",
+                  "IC", "ND"]
 
 feature_labels = {"GO_ID", "DB_REF", "GO_PARENTS", "Aspect", "Taxon", "DB_OBSYN", "WITH"}
 stoplist = set('for a of the and to in'.split())
@@ -158,6 +164,13 @@ def clean_text(line, stemming=False):
             new_line.append(new_token)
     return ' '.join(new_line)
 
+def get_evidence_code_dict():
+    evid = {}
+    for i, each in enumerate(evidence_codes):
+        evid[each] = i
+    return evid
+
+
 def get_corpus(texts, dct=None):
     # use a pre-saved dictionary for abstracts
     if not dct:
@@ -170,10 +183,11 @@ def get_tfidf_vectors_sparse(corpus, tfidf_model=None):
     if not tfidf_model:
         tfidf_model = load_pkl_data("../data/tfidf_model.pickle")
     vectors = []
+    num_terms = len(tfidf_model.idfs)
     for i , each in enumerate(corpus):
         vector = tfidf_model[corpus[i]]
         vectors.append(vector)
-    scipy_csc_matrix = matutils.corpus2csc(vectors)
+    scipy_csc_matrix = matutils.corpus2csc(vectors, num_terms=num_terms)
     return scipy_csc_matrix.T
 
 
@@ -191,16 +205,18 @@ def create_tfidf_model(documents=None, dump=False):
     return model
 
 
-def create_training_data(data_filename, ontology_filename=None):
+def create_training_data(data_filename, ontology_filename=None, dump=False):
     node_to_index, index_to_node = create_go_term_vector(ontology_filename)
     json_data = load_json_data(data_filename)
     graph = obonet.read_obo("../data/go.obo")
     abstract_data = load_pkl_data("../data/all_abstract_withID.pickle")
     dct = load_pkl_data("../data/dct.pickle")
     tfidf_model = load_pkl_data("../data/tfidf_model.pickle")
+    evid_dict = get_evidence_code_dict()
     lab = {"GO_ID", "DB_REF", "GO_PARENTS", "Aspect", "Taxon", "DB_OBSYN", "WITH"}
     Aspect = {"P":0, "F":1, "C":2}
     features = []
+    labels = []
     for point in json_data:
         #GO VECTOR
         goterm = point["GO_ID"]
@@ -230,7 +246,21 @@ def create_training_data(data_filename, ontology_filename=None):
         aspect_one_hot[Aspect[point["Aspect"]]] = 1.0
         aspect_one_hot = csc_matrix(aspect_one_hot)
         feature = hstack([feature, aspect_one_hot])
-        print("OK")
+        #Label
+        evd_c = point["EVIDENCE"]
+        # evd_one_hot = np.zeros(len(evidence_codes))
+        # evd_one_hot[evid_dict[evd_c]] = 1.0
+        # evd_one_hot = csc_matrix(evd_one_hot)
+        #stack all data
+        features.append(feature)
+        labels.append(evid_dict[evd_c])
+    features = vstack(features)
+    labels = np.asarray(labels)
+    if dump:
+        save_pkl_data("../data/data_feature_vector.pickle", features)
+        save_pkl_data("../data/data_labels_vector_non_sparse.pickle", labels)
+
+
 
 
 
@@ -242,7 +272,7 @@ def create_training_data(data_filename, ontology_filename=None):
 # vecs = get_tfidf_vectors_sparse(corpus)
 # create_go_term_vector()
 
-# create_training_data("../data/temp_data.json")
+# create_training_data("../data/temp_data.json", dump=True)
 
 
 # json_data = load_json_data("../data/all_data.json")
