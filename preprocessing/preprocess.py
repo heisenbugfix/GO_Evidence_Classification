@@ -9,7 +9,7 @@ from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem.porter import PorterStemmer
 from scipy.sparse import csc_matrix, hstack, vstack
-
+data_directory = "../data/"
 labels = ["DB","DB_OID","DB_OBS",
           "Qualifier","GO_ID","DB_REF","EVIDENCE",
           "WITH","Aspect","DB_OBN","DB_OBSYN",
@@ -60,13 +60,13 @@ def dump_to_json(filename, outfile=None):
             curr[label] = val
         data_dict.append(curr)
     if outfile is None:
-        outfile = "../data/all_data.json",'w'
+        outfile = data_directory+"all_data.json"
     with open(outfile,'w') as f:
         json.dump(data_dict, f)
 
 def load_pubmed_text_data(filename=None):
     if not filename:
-        filename = "../data/pubmed_output.txt"
+        filename = data_directory+"pubmed_output.txt"
     data = {}
     with open(filename, 'r', encoding='latin1')as f:
         for each in f:
@@ -80,14 +80,14 @@ def load_pubmed_text_data(filename=None):
 def dump_pubmed_json_fromtext(infile=None, outfile=None):
     data = load_pubmed_text_data(infile)
     if not outfile:
-        outfile = "../data/pubmed.json"
+        outfile = data_directory + "pubmed.json"
         with open(outfile, 'w') as f:
             json.dump(data,f, indent=2)
 
 
 def create_go_term_vector(filename=None, dump=False):
     if not filename:
-        filename = "../data/go.obo"
+        filename = data_directory+ "go.obo"
     graph = obonet.read_obo(filename)
     nodes = graph._adj.keys()
     node_to_index = {}
@@ -98,15 +98,15 @@ def create_go_term_vector(filename=None, dump=False):
     # ohenc = OneHotEncoder(n_values=len(node_to_index))
     # data = ohenc.fit([[1],[3456],[234],[4367]])
     if dump:
-        with open("../data/node_to_index.pkl", 'wb') as f:
+        with open(data_directory + "node_to_index.pkl", 'wb') as f:
             pkl.dump(node_to_index, f)
-        with open("../data/index_to_node.pkl", 'wb') as f:
+        with open(data_directory + "index_to_node.pkl", 'wb') as f:
             pkl.dump(index_to_node, f)
     return node_to_index, index_to_node
 
 def get_parent_nodes(node, graph=None):
     if not graph:
-        graph = obonet.read_obo("../data/go.obo")
+        graph = obonet.read_obo(data_directory + "go.obo")
     ans = []
     node_dic = graph._adj[node]
     for every in node_dic:
@@ -117,13 +117,11 @@ def get_parent_nodes(node, graph=None):
 
 
 def collect_cleaned_goref_pubmed_data(dump=False):
-    with open("../data/GO_REF.pickle", 'rb') as f:
+    with open(data_directory + "GO_REF.pickle", 'rb') as f:
         gorefData = pkl.load(f)
     all_text = []
     all_text_dict = {}
     for i, each in enumerate(gorefData):
-        # if i > 19:
-        #     break
         text = gorefData[each]
         for line in text:
             line = clean_text(line)
@@ -135,9 +133,9 @@ def collect_cleaned_goref_pubmed_data(dump=False):
         all_text.append(line)
         all_text_dict[each] = line
     if dump:
-        with open("../data/all_abstract.pickle",'wb') as f:
+        with open(data_directory + "all_abstract.pickle",'wb') as f:
             pkl.dump(all_text, f)
-        with open("../data/all_abstract_withID.pickle", 'wb') as f:
+        with open(data_directory + "all_abstract_withID.pickle", 'wb') as f:
             pkl.dump(all_text_dict, f)
     return all_text, all_text_dict
 
@@ -174,14 +172,14 @@ def get_evidence_code_dict():
 def get_corpus(texts, dct=None):
     # use a pre-saved dictionary for abstracts
     if not dct:
-        dct = load_pkl_data("../data/dct.pickle")
+        dct = load_pkl_data(data_directory + "dct.pickle")
     corpus = [dct.doc2bow(line) for line in texts]
     return corpus
 
 
 def get_tfidf_vectors_sparse(corpus, tfidf_model=None):
     if not tfidf_model:
-        tfidf_model = load_pkl_data("../data/tfidf_model.pickle")
+        tfidf_model = load_pkl_data(data_directory + "tfidf_model.pickle")
     vectors = []
     num_terms = len(tfidf_model.idfs)
     for i , each in enumerate(corpus):
@@ -193,25 +191,25 @@ def get_tfidf_vectors_sparse(corpus, tfidf_model=None):
 
 def create_tfidf_model(documents=None, dump=False):
     if not documents:
-        documents = load_pkl_data("../data/all_abstract.pickle")
+        documents = load_pkl_data(data_directory + "all_abstract.pickle")
     texts = [[word for word in document.lower().split() if word not in stoplist]
              for document in documents]
     dct = corpora.Dictionary(texts)
     corpus = [dct.doc2bow(line) for line in texts]  # convert dataset to BoW format
     model = models.TfidfModel(corpus)  # fit model
     if dump:
-        save_pkl_data("../data/dct.pickle", dct)
-        save_pkl_data("../data/tfidf_model.pickle", model)
+        save_pkl_data(data_directory + "dct.pickle", dct)
+        save_pkl_data(data_directory + "tfidf_model.pickle", model)
     return model
 
 
 def create_training_data(data_filename, ontology_filename=None, dump=False):
     node_to_index, index_to_node = create_go_term_vector(ontology_filename)
     json_data = load_json_data(data_filename)
-    graph = obonet.read_obo("../data/go.obo")
-    abstract_data = load_pkl_data("../data/all_abstract_withID.pickle")
-    dct = load_pkl_data("../data/dct.pickle")
-    tfidf_model = load_pkl_data("../data/tfidf_model.pickle")
+    graph = obonet.read_obo(data_directory + "go.obo")
+    abstract_data = load_pkl_data(data_directory + "all_abstract_withID.pickle")
+    dct = load_pkl_data(data_directory + "dct.pickle")
+    tfidf_model = load_pkl_data(data_directory + "tfidf_model.pickle")
     evid_dict = get_evidence_code_dict()
     lab = {"GO_ID", "DB_REF", "GO_PARENTS", "Aspect", "Taxon", "DB_OBSYN", "WITH"}
     Aspect = {"P":0, "F":1, "C":2}
@@ -257,10 +255,8 @@ def create_training_data(data_filename, ontology_filename=None, dump=False):
     features = vstack(features)
     labels = np.asarray(labels)
     if dump:
-        save_pkl_data("../data/data_feature_vector.pickle", features)
-        save_pkl_data("../data/data_labels_vector_non_sparse.pickle", labels)
-
-
+        save_pkl_data(data_directory + "data_feature_vector.pickle", features)
+        save_pkl_data(data_directory + "data_labels_vector_non_sparse.pickle", labels)
 
 
 
