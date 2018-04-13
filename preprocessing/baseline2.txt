@@ -1,0 +1,17 @@
+per go_id 25928
+per ref_id 142803
+Test set length 667988
+ANNOTATION BASED F1 scores
+% estimated by existing annotations  0.995724474092349
+Micro 0.533225147757
+Macro 0.310593570612
+Weighted 0.48811488271
+REFERENCE BASED F1 scores
+% estimated by existing references  0.9055551896141847
+Micro 0.0105286322509
+Macro 0.00709543114213
+Weighted 0.00777321891986
+
+real	0m44.126s
+user	0m33.212s
+sys	0m5.474s
