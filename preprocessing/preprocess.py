@@ -361,8 +361,8 @@ def split_data_helper(data_len, data):
 
 # collect_cleaned_goref_pubmed_data(data_directory+"final_data/train_dev_test/pubmed_latest.json", dump=True)
 # create_tfidf_model(dump=True)
-# create_training_data("../data/final_data/train_dev_test/unique/Xtrain_unique.json",dump=True,feature_filename="Xtrain_unique.pickle",label_filename="Ytrain_unique.pickle")
-# create_training_data("../data/final_data/train_dev_test/unique/Xtest_unique.json",dump=True,feature_filename="Xtest_unique.pickle",label_filename="Ytest_unique.pickle")
+# create_training_data("../data/final_data/train_dev_test/unique/Xdev_unique.json",dump=True,feature_filename="Xdev_unique.pickle",label_filename="Ydev_unique.pickle")
+# create_training_data("../data/final_data/train_dev_test/all/Xdev_all.json",dump=True,feature_filename="Xdev.pickle",label_filename="Ydev.pickle")
 
 # create_train_dev_test()
 # create_raw_data()
