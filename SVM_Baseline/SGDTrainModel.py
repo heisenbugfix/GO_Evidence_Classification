@@ -15,7 +15,7 @@ from sklearn.metrics import precision_recall_fscore_support
 
 
 
-def train_model(config, dataset_name,model_name):
+def train_model(config, dataset_name,model_name, f1_type):
     """ Train based on the given config, model / dataset
 
     :param config: config object
@@ -39,8 +39,10 @@ def train_model(config, dataset_name,model_name):
 
     # Set up batcher
     print "creating batcher"
-    batcher = Batcher(config, "GO_Evidence_Classification/data/pubmed_output.txt", "goa_full_70_train.gaf", dev=True)
-    dev_batcher = Batcher(config, "GO_Evidence_Classification/data/pubmed_output.txt", "goa_full_10_dev.gaf", dev=True)
+    #batcher = Batcher(config, "blah", "GO_Evidence_Classification/train_dev_test/xtrain_unique.txt", dev=True)
+    #dev_batcher = Batcher(config, "blah", "GO_Evidence_Classification/train_dev_test/xtest_unique.txt", dev=True)
+    batcher = Batcher(config, "blah", "GO_Evidence_Classification/train_dev_test/xtrain_all.txt", dev=False)
+    dev_batcher = Batcher(config, "blah", "GO_Evidence_Classification/train_dev_test/xtest_all.txt", dev=True)
     for dev_gene_ids, dev_abstracts, dev_labels, dev_aspects in dev_batcher.get_next_batch():
         break
     print "batcher created"
@@ -53,13 +55,14 @@ def train_model(config, dataset_name,model_name):
     counter = 0
     for gene_ids, abstracts, labels, aspects in batcher.get_next_batch():
         counter = counter + 1
-        model.partial_fit(abstracts, labels, classes=[i for i in range(0, 21)])
-
+        model.partial_fit(abstracts, labels, classes=[i for i in range(0, 22)])
+#(0.24427818646643526, 0.24124386252045826, 0.24270167527061517, None)
+#0.69754891958568932, 0.61211129296235678, 0.65085934098754816
         if counter % 100 == 0:
             #predict_dev
             predicts = model.predict(dev_abstracts)
             #print("Processed {} batches, Accuracy of batch {}: {}.".format(counter, counter, predict_dev(predicts, dev_labels)))
-            print("Processed {} batches, Accuracy of batch {}: {}.".format(counter, counter, precision_recall_fscore_support(predicts, dev_labels, average="weighted")))
+            print("Processed {} batches, Accuracy of batch {}: {}.".format(counter, counter, precision_recall_fscore_support(predicts, dev_labels, average=f1_type)))
             sys.stdout.flush()
         #if counter == config.num_minibatches:
         #    break
@@ -77,4 +80,5 @@ if __name__ == "__main__":
     config = Config(sys.argv[1])
     dataset_name = sys.argv[2]
     model_name = sys.argv[3]
-    train_model(config, dataset_name,model_name)
+    f1_type = sys.argv[4]
+    train_model(config, dataset_name,model_name, f1_type)

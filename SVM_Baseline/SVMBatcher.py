@@ -17,7 +17,7 @@ class Batcher(object):
         self.return_one_epoch = return_one_epoch
         self.start_index = 0
         #self.abtract_lengths = {}
-        self.pmid_to_abstract = pickle.load(open("pmid_to_wordemb.p", "rb"))
+        self.pmid_to_abstract = pickle.load(open("pmid_latest_to_wordemb.p", "rb"))
         #self.get_pubmed_map(abstracts_file)
         self.max_abstract_len = config.max_abstract_len
         self.load_data(abstracts_file, data_file)
@@ -83,7 +83,21 @@ class Batcher(object):
     def reset(self):
         self.start_index = 0
 
-    def get_toy_data(self, filepath):
+    def get_toy_data(self, filepath): #NEW FORMAT
+        gene_ids = []
+        gene_pmids = []
+        evidence_codes = []
+        aspects = []
+        with codecs.open(filepath, "r", "UTF-8") as rf:
+            for line in rf:
+                split = line.strip().split("\t")
+                gene_ids.append(split[0])
+                gene_pmids.append(split[1])
+                evidence_codes.append(split[2])
+                aspects.append(split[3])
+        return gene_ids, gene_pmids, evidence_codes, aspects
+
+    '''def get_toy_data(self, filepath):
         gene_ids = []
         gene_pmids = []
         evidence_codes = []
@@ -97,7 +111,7 @@ class Batcher(object):
                     gene_pmids.append(split[5].split(":")[1])
                     evidence_codes.append(split[6])
                     aspects.append(split[8])
-        return gene_ids, gene_pmids, evidence_codes, aspects
+        return gene_ids, gene_pmids, evidence_codes, aspects'''
 
     def aspects_to_onehot(self, aspects):
         asp_onehots = []
@@ -134,6 +148,9 @@ class Batcher(object):
         EV_TO_ONEHOT_DICT["HDA"] = [0] * 19 + [1] + [0] * 2
         EV_TO_ONEHOT_DICT["IC"] = [0] * 20 + [1] + [0] * 1
         EV_TO_ONEHOT_DICT["ND"] = [0] * 21 + [1]
+        EV_TO_ONEHOT_DICT["HMP"] = [0] * 21 + [1]
+        EV_TO_ONEHOT_DICT["HEP"] = [0] * 21 + [1]
+        EV_TO_ONEHOT_DICT["HGI"] = [0] * 21 + [1]
         evidence_onehots = np.asarray([EV_TO_ONEHOT_DICT[code] for code in evidence_codes])
         evidence_nums = np.asarray([np.argmax(i) for i in evidence_onehots])
 

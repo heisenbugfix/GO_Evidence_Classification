@@ -16,7 +16,7 @@ from sklearn.metrics import precision_recall_fscore_support
 
 
 
-def train_model(config, dataset_name,model_name):
+def train_model(config, dataset_name,model_name, f1_type):
     """ Train based on the given config, model / dataset
 
     :param config: config object
@@ -40,15 +40,19 @@ def train_model(config, dataset_name,model_name):
 
     # Set up batcher
     print "creating batcher"
-    batcher = Batcher(config, "GO_Evidence_Classification/data/pubmed_output.txt", "goa_full_70_train.gaf", dev=True)
+    #batcher = Batcher(config, "GO_Evidence_Classification/data/pubmed_output.txt", "GO_Evidence_Classification/train_dev_test/xtrain_unique.txt", dev=True)
+    batcher = Batcher(config, "blah", "GO_Evidence_Classification/train_dev_test/xtrain_all.txt", dev=True)
+    dev_batcher = Batcher(config, "blah", "GO_Evidence_Classification/train_dev_test/xtest_all.txt", dev=True)
     for gene_ids, abstracts, labels, aspects in batcher.get_next_batch():
         break
-    labels_ct = [0] * 21
+    labels_ct = [0] * 22
     for i in labels:
+        if i > 22:
+            print i
         labels_ct[i] += 1
     for i in range(0, len(labels_ct)):
         labels_ct[i] = labels_ct[i] * 1.0 / len(labels)
-    dev_batcher = Batcher(config, "GO_Evidence_Classification/data/pubmed_output.txt", "goa_full_10_dev.gaf", dev=True)
+    #dev_batcher = Batcher(config, "GO_Evidence_Classification/data/pubmed_output.txt", "GO_Evidence_Classification/train_dev_test/xtest_unique.txt", dev=True)
     for dev_gene_ids, dev_abstracts, dev_labels, dev_aspects in dev_batcher.get_next_batch():
         break
     print "batcher created"
@@ -59,8 +63,8 @@ def train_model(config, dataset_name,model_name):
 
     # Training loop
     counter = 0
-    dev_predicts = [np.random.choice(range(0, 21), p=labels_ct) for i in range(0, len(dev_labels))]
-    print(precision_recall_fscore_support(dev_predicts, dev_labels, average="weighted"))
+    dev_predicts = [np.random.choice(range(0, 22), p=labels_ct) for i in range(0, len(dev_labels))]
+    print(precision_recall_fscore_support(dev_predicts, dev_labels, average=f1_type))
 
 if __name__ == "__main__":
 
@@ -68,4 +72,5 @@ if __name__ == "__main__":
     config = Config(sys.argv[1])
     dataset_name = sys.argv[2]
     model_name = sys.argv[3]
-    train_model(config, dataset_name,model_name)
+    f1_type = sys.argv[4]
+    train_model(config, dataset_name,model_name, f1_type)
