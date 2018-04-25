@@ -8,7 +8,10 @@
   "go_embedding_size":50,
   "classes":25,
   "model_name":"model_date",
-  "cell":0,
+  "word_cell":0,
+  "sentence_cell":0,
+  "word_output_size":10,
+  "sentence_output_size":10,
   "max_grad_norm":5.0,
   "dropout_keep_prob":0.5
 }
