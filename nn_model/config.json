@@ -1,17 +1,20 @@
 {
   "epochs":1000,
-  "train_directory":"asdad",
+  "is_training":false,
+  "data_directory":"asdad",
   "test_directory":"asdd",
-  "vocab_size":18972,
-  "embedding_size":100,
-  "go_size":44000,
-  "go_embedding_size":50,
+  "checkpoint_dir":"../checkpoints/",
+  "tflog_dir":"../tflogs/",
+  "vocab_size":10,
+  "embedding_size":5,
+  "go_size":44,
+  "go_embedding_size":10,
   "classes":25,
   "model_name":"model_date",
-  "word_cell":0,
-  "sentence_cell":0,
+  "cell":0,
   "word_output_size":10,
   "sentence_output_size":10,
   "max_grad_norm":5.0,
-  "dropout_keep_prob":0.5
+  "dropout_keep_prob":0.5,
+  "dump_log":false
 }

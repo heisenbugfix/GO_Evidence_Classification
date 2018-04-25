@@ -4,10 +4,15 @@ from preprocessing.preprocess import *
 import numpy as np
 # For each class
 model = load_pkl_data("../data/model_4_13_2018.pickle")
-Y_test = load_pkl_data("../data/Ydev.pickle")
-X_test = load_pkl_data("../data/Xdev.pickle")
+Y_test = load_pkl_data("../data/Ytest.pickle")
+X_test = load_pkl_data("../data/Xtest.pickle")
 X_test = X_test.tocsc()
 y_score = model.predict(X_test)
+scores = []
+scores.append(Y_test)
+scores.append(y_score)
+save_pkl_data("logistic_regression_test_scores.pickle", scores)
+exit(1)
 acc = model.score(X_test, Y_test)
 print("Accuracy of model is %f"%acc)
 precision = dict()
