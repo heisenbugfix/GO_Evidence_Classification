@@ -1,6 +1,9 @@
 import tensorflow as tf
 import json
 import time
+import logging
+import pickle as pkl
+
 
 def HAN_model_1(session, config, restore=False):
     """Hierarhical Attention Network"""
@@ -14,11 +17,11 @@ def HAN_model_1(session, config, restore=False):
 
     is_training = tf.placeholder(dtype=tf.bool, name='is_training')
     cell = GRUCell(30)
-    if config["cell"]==0:
+    if config["cell"] == 0:
         cell = GRUCell(30)
-    elif config["cell"]==1:
+    elif config["cell"] == 1:
         cell = BNLSTMCell(80, is_training)  # h-h batchnorm LSTMCell
-    elif config["cell"]==2:
+    elif config["cell"] == 2:
         cell = MultiRNNCell([cell] * 5)
 
     model = HANClassifierModel(
@@ -63,41 +66,45 @@ def batch_iterator(dataset, batch_size, max_epochs):
                 xb, yb = [], []
 
 
-def train(configuration):
+def train_test(configuration):
     tf.reset_default_graph()
-
+    logger = logging.getLogger("---Attention Network---")
     config = tf.ConfigProto(allow_soft_placement=True)
+
     with tf.Session(config=config) as s:
         model, saver = model_fn(s, configuration)
+        ########
+        # Written only for sanity check of the model
+        # fd = {
+        #     model.is_training: True,
+        #     model.inputs: [[
+        #         [5, 4, 1, 0],
+        #         [3, 3, 6, 7],
+        #         [6, 7, 0, 0]
+        #     ],
+        #         [
+        #             [2, 2, 1, 0],
+        #             [3, 3, 6, 7],
+        #             [0, 0, 0, 0]
+        #         ]],
+        #     model.word_lengths: [
+        #         [3, 4, 2],
+        #         [3, 4, 0],
+        #     ],
+        #     model.sentence_lengths: [3, 2],
+        #     model.labels: [[0, 1, 0], [1, 1, 1]],
+        #     model.aspect:[[0,1,0],[1,0,0]],
+        #     model.go_inputs:[1,2]
+        # }
+        ########
         if configuration["is_training"]:
             summary_writer = tf.summary.FileWriter(configuration["tflog_dir"], graph=tf.get_default_graph())
-
-            ########
-            fd = {
-                model.is_training: True,
-                model.inputs: [[
-                    [5, 4, 1, 0],
-                    [3, 3, 6, 7],
-                    [6, 7, 0, 0]
-                ],
-                    [
-                        [2, 2, 1, 0],
-                        [3, 3, 6, 7],
-                        [0, 0, 0, 0]
-                    ]],
-                model.word_lengths: [
-                    [3, 4, 2],
-                    [3, 4, 0],
-                ],
-                model.sentence_lengths: [3, 2],
-                model.labels: [[0, 1, 0], [1, 1, 1]],
-                model.aspect:[[0,1,0],[1,0,0]],
-                model.go_inputs:[1,2]
-            }
-            ########
-            # for i, (x, y) in enumerate(batch_iterator(task.read_trainset(epochs=3), args.batch_size, 300)):
-            for i in range(2):
-                # fd = model.get_feed_data(x, y, class_weights=class_weights)
+            # Loading train data
+            with open(configuration["train_data_path"], 'rb')as f:
+                data = pkl.load(f)
+            logger.info("Loaded Data")
+            for i in range(1, configuration["epochs"] + 1):
+                fd = model.get_feed_data(data)
                 t0 = time.clock()
                 step, summaries, loss, _ = s.run([
                     model.global_step,
@@ -106,21 +113,56 @@ def train(configuration):
                     model.train_op,
                 ], fd)
                 td = time.clock() - t0
-
+                logger.info("STEP: %7d | Loss: %.8f  | Time: %f" % (step, loss, td))
                 if configuration["dump_log"]:
                     summary_writer.add_summary(summaries, global_step=step)
 
-                if step != 0:
-                    print('checkpoint & graph meta')
+                if step % configuration["dump_after_every_x_epochs"] == 0:
+                    logger.info('checkpoint & graph meta')
                     saver.save(s, configuration["checkpoint_dir"], global_step=step)
-                    print('checkpoint done')
-
+                    logger.info('checkpoint done')
+        else:
+            # Load test data:
+            with open(configuration["test_data_path"], 'rb') as f:
+                data = pkl.load(f)
+            logger.info("Loaded Test Data")
+            fd = model.get_feed_data(data,is_training=False,full_batch=True)
+            sigmoids = s.run(model.prediction, fd)
+            predictions = sigmoids > 0.5
+            predictions = predictions.astype(int)
+            # print(predictions)
+            # calculate precision recall f1
 
 
 def main():
     with open("config.json") as f:
         config = json.load(f)
-        train(config)
+
+        if config["is_training"]:
+            try:
+                logfile = config["train_log_filename"]
+                with open(logfile, 'w') as f:
+                    pass
+            except:
+                logfile = "log_train.txt"
+            logging.basicConfig(filename=logfile,
+                                filemode='a',
+                                level=logging.DEBUG)
+
+            logging.info("Starting training of Attention Model")
+        else:
+            try:
+                logfile = config["test_log_filename"]
+                with open(logfile, 'w') as f:
+                    pass
+            except:
+                logfile = "log_test.txt"
+            logging.basicConfig(filename=logfile,
+                                filemode='a',
+                                level=logging.DEBUG)
+
+            logging.info("Starting testing of Attention Model")
+        train_test(config)
 
 
 if __name__ == '__main__':
