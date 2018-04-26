@@ -5,6 +5,7 @@
   "batch_size" : 1000,
   "train_data_path":"asdad",
   "test_data_path":"asdd",
+  "w_emb_path": "wemb.pickle",
   "checkpoint_dir":"../checkpoints/",
   "tflog_dir":"../tflogs/",
   "vocab_size":10,

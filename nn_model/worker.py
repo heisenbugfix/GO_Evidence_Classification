@@ -98,6 +98,10 @@ def train_test(configuration):
         # }
         ########
         if configuration["is_training"]:
+            # LOAD WORD EMBEDDINGS
+            with open(configuration["w_emb_path"],'rb') as f:
+                w_emb = pkl.load(f)
+            s.run(model.word_emb_init,feed_dict=w_emb)
             summary_writer = tf.summary.FileWriter(configuration["tflog_dir"], graph=tf.get_default_graph())
             # Loading train data
             with open(configuration["train_data_path"], 'rb')as f:
