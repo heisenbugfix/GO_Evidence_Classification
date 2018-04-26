@@ -5,7 +5,7 @@ import logging
 import pickle as pkl
 
 
-def HAN_model_1(session, config, restore=False):
+def HAN_model_1(session, config, logger, restore=False):
     """Hierarhical Attention Network"""
     try:
         from tensorflow.contrib.rnn import GRUCell, MultiRNNCell, DropoutWrapper
@@ -19,10 +19,16 @@ def HAN_model_1(session, config, restore=False):
     cell = GRUCell(30)
     if config["cell"] == 0:
         cell = GRUCell(30)
+        logger.info("Using GRU")
     elif config["cell"] == 1:
         cell = BNLSTMCell(80, is_training)  # h-h batchnorm LSTMCell
-    elif config["cell"] == 2:
-        cell = MultiRNNCell([cell] * 5)
+        logger.info("Using batch Normalized LSTM")
+    else:
+        logger.info("Using GRU")
+
+    # elif config["cell"] == 2:
+    #     cell = MultiRNNCell([cell] * 5)
+    #     logger.info("Using multi RNN cells")
 
     model = HANClassifierModel(
         vocab_size=10,
@@ -35,8 +41,8 @@ def HAN_model_1(session, config, restore=False):
         word_output_size=10,
         sentence_output_size=10,
         max_grad_norm=5.0,
-        dropout_keep_proba=0.5
-        # is_training = config["is_training"]
+        dropout_keep_proba=0.5,
+        is_training = is_training
     )
 
     saver = tf.train.Saver(tf.global_variables())
@@ -68,11 +74,11 @@ def batch_iterator(dataset, batch_size, max_epochs):
 
 def train_test(configuration):
     tf.reset_default_graph()
-    logger = logging.getLogger("---Attention Network---")
+    logger = logging.getLogger("HAN")
     config = tf.ConfigProto(allow_soft_placement=True)
 
     with tf.Session(config=config) as s:
-        model, saver = model_fn(s, configuration)
+        model, saver = model_fn(s, configuration, logger)
         ########
         # Written only for sanity check of the model
         # fd = {

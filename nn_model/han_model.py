@@ -259,6 +259,6 @@ if __name__ == '__main__':
 
         sigmoids = (session.run(model.prediction, fd))
         predictions = sigmoids > 0.5
-        print(predictions.astype(int))
+        print(predictions.astype(float))
         print(session.run([model.train_op, model.loss], fd))
 
