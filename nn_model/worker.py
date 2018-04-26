@@ -30,8 +30,8 @@ def HAN_model_1(session, config, restore=False):
         go_size=10,
         go_embedding_size=10,
         classes=3,
-        word_cell=GRUCell(10),
-        sentence_cell=GRUCell(10),
+        word_cell=cell,
+        sentence_cell=cell,
         word_output_size=10,
         sentence_output_size=10,
         max_grad_norm=5.0,
@@ -108,7 +108,7 @@ def train_test(configuration):
                 data = pkl.load(f)
             logger.info("Loaded Data")
             for i in range(1, configuration["epochs"] + 1):
-                fd = model.get_feed_data(data)
+                fd, _ = model.get_feed_data(data)
                 t0 = time.clock()
                 step, summaries, loss, _ = s.run([
                     model.global_step,
@@ -130,11 +130,11 @@ def train_test(configuration):
             with open(configuration["test_data_path"], 'rb') as f:
                 data = pkl.load(f)
             logger.info("Loaded Test Data")
-            fd = model.get_feed_data(data,is_training=False,full_batch=True)
+            fd, y_true = model.get_feed_data(data,is_training=False,full_batch=True)
             sigmoids = s.run(model.prediction, fd)
             predictions = sigmoids > 0.5
-            predictions = predictions.astype(int)
-            # print(predictions)
+            y_pred = predictions.astype(int)
+            # print(y_pred, y_true)
             # calculate precision recall f1
 
 

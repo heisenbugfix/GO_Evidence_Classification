@@ -204,7 +204,10 @@ class HANClassifierModel():
         if is_training:
             fd[self.labels] = labels
         fd[self.is_training] = is_training
-        return fd
+        if is_training:
+            return fd, None
+        else:
+            return fd, labels
 
 
 if __name__ == '__main__':
