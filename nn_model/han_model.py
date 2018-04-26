@@ -1,4 +1,5 @@
 import tensorflow as tf
+import random
 import tensorflow.contrib.layers as layers
 from nn_model.model_components import task_specific_attention, bidirectional_rnn
 
@@ -176,23 +177,34 @@ class HANClassifierModel():
                 self.logits = layers.fully_connected(
                     concatenated_sentence_level_out, self.classes, activation_fn=None)
 
-                self.prediction = tf.argmax(self.logits, axis=-1)
+                self.prediction = tf.sigmoid(self.logits)
 
-    # def get_feed_data(self, x, y=None, class_weights=None, is_training=True):
-    #     x_m, doc_sizes, sent_sizes = data_util.batch(x)
-    #     fd = {
-    #         self.inputs: x_m,
-    #         self.sentence_lengths: doc_sizes,
-    #         self.word_lengths: sent_sizes,
-    #     }
-    #     if y is not None:
-    #         fd[self.labels] = y
-    #         if class_weights is not None:
-    #             fd[self.sample_weights] = [class_weights[yy] for yy in y]
-    #         else:
-    #             fd[self.sample_weights] = np.ones(shape=[len(x_m)], dtype=np.float32)
-    #     fd[self.is_training] = is_training
-    #     return fd
+    def get_feed_data(self, data, is_training=True, full_batch=False,B=1000):
+        inputs = data['abstract']
+        sentence_lengths = data["doc_len"]
+        word_lengths = data["sent_len"]
+        go_inputs = data["go_inputs"]
+        labels = data["label"]
+        aspect = data["aspect"]
+        if not full_batch:
+            indx = random.sample(range(0, data["abstract"].shape[0]), B)
+            inputs = inputs[indx]
+            sentence_lengths = sentence_lengths[indx]
+            word_lengths = word_lengths[indx]
+            go_inputs = go_inputs[indx]
+            labels = labels[indx]
+            aspect = aspect[indx]
+        fd = {
+            self.inputs: inputs,
+            self.sentence_lengths: sentence_lengths,
+            self.word_lengths: word_lengths,
+            self.go_inputs: go_inputs,
+            self.aspect: aspect
+        }
+        if is_training:
+            fd[self.labels] = labels
+        fd[self.is_training] = is_training
+        return fd
 
 
 if __name__ == '__main__':
@@ -242,6 +254,8 @@ if __name__ == '__main__':
             model.go_inputs:[1,2]
         }
 
-        print(session.run(model.logits, fd))
+        sigmoids = (session.run(model.prediction, fd))
+        predictions = sigmoids > 0.5
+        print(predictions.astype(int))
         print(session.run([model.train_op, model.loss], fd))
 
