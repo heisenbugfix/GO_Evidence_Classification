@@ -31,17 +31,17 @@ def HAN_model_1(session, config, logger, restore=False):
     #     logger.info("Using multi RNN cells")
 
     model = HANClassifierModel(
-        vocab_size=10,
-        embedding_size=5,
-        go_size=10,
-        go_embedding_size=10,
-        classes=3,
+        vocab_size=config["vocab_size"],
+        embedding_size=config["embedding_size"],
+        go_size=config["go_size"],
+        go_embedding_size=config["go_embedding_size"],
+        classes=config["classes"],
         word_cell=cell,
         sentence_cell=cell,
-        word_output_size=10,
-        sentence_output_size=10,
-        max_grad_norm=5.0,
-        dropout_keep_proba=0.5,
+        word_output_size=config["word_output_size"],
+        sentence_output_size=config["sentence_output_size"],
+        max_grad_norm=config["max_grad_norm"],
+        dropout_keep_proba=config["dropout_keep_prob"],
         is_training = is_training
     )
 
