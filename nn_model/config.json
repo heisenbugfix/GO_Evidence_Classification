@@ -14,7 +14,7 @@
   "go_embedding_size":50,
   "classes":25,
   "model_name":"model_date",
-  "cell":1,
+  "cell":0,
   "word_output_size":100,
   "sentence_output_size":100,
   "max_grad_norm":5.0,
