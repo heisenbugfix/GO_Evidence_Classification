@@ -1,7 +1,7 @@
 import tensorflow as tf
 import random
 import tensorflow.contrib.layers as layers
-from nn_model.model_components import task_specific_attention, bidirectional_rnn
+from model_components import task_specific_attention, bidirectional_rnn
 
 
 class HANClassifierModel():

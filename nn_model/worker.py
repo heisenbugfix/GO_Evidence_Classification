@@ -12,8 +12,8 @@ def HAN_model_1(session, config, logger, restore=False):
     except ImportError:
         MultiRNNCell = tf.nn.rnn_cell.MultiRNNCell
         GRUCell = tf.nn.rnn_cell.GRUCell
-    from nn_model.bn_lstm import BNLSTMCell
-    from nn_model.han_model import HANClassifierModel
+    from bn_lstm import BNLSTMCell
+    from han_model import HANClassifierModel
 
     is_training = tf.placeholder(dtype=tf.bool, name='is_training')
     cell = GRUCell(30)
