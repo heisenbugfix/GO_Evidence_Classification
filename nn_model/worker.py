@@ -16,9 +16,9 @@ def HAN_model_1(session, config, logger, restore=False):
     from han_model import HANClassifierModel
 
     is_training = tf.placeholder(dtype=tf.bool, name='is_training')
-    cell = GRUCell(30)
+    cell = GRUCell(50)
     if config["cell"] == 0:
-        cell = GRUCell(30)
+        cell = GRUCell(50)
         logger.info("Using GRU")
     elif config["cell"] == 1:
         cell = BNLSTMCell(80, is_training)  # h-h batchnorm LSTMCell
