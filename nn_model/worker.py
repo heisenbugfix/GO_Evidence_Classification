@@ -42,7 +42,7 @@ def HAN_model_1(session, config, logger, restore=False):
         sentence_output_size=config["sentence_output_size"],
         max_grad_norm=config["max_grad_norm"],
         dropout_keep_proba=config["dropout_keep_prob"],
-        is_training = is_training
+        is_training=is_training
     )
 
     saver = tf.train.Saver(tf.global_variables())
@@ -105,9 +105,9 @@ def train_test(configuration):
         ########
         if configuration["is_training"]:
             # LOAD WORD EMBEDDINGS
-            with open(configuration["w_emb_path"],'rb') as f:
+            with open(configuration["w_emb_path"], 'rb') as f:
                 w_emb = pkl.load(f)
-            s.run(model.word_emb_init,feed_dict=w_emb)
+            s.run(model.word_emb_init, feed_dict={model.word_emb_placeholder: w_emb})
             summary_writer = tf.summary.FileWriter(configuration["tflog_dir"], graph=tf.get_default_graph())
             # Loading train data
             with open(configuration["train_data_path"], 'rb')as f:
@@ -136,7 +136,7 @@ def train_test(configuration):
             with open(configuration["test_data_path"], 'rb') as f:
                 data = pkl.load(f)
             logger.info("Loaded Test Data")
-            fd, y_true = model.get_feed_data(data,is_training=False,full_batch=True)
+            fd, y_true = model.get_feed_data(data, is_training=False, full_batch=True)
             sigmoids = s.run(model.prediction, fd)
             predictions = sigmoids > 0.5
             y_pred = predictions.astype(int)
