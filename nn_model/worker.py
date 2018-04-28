@@ -113,8 +113,9 @@ def train_test(configuration):
             with open(configuration["train_data_path"], 'rb')as f:
                 data = pkl.load(f)
             logger.info("Loaded Data")
+            full_batch = configuration["full_batch"]
             for i in range(1, configuration["epochs"] + 1):
-                fd, _ = model.get_feed_data(data)
+                fd, _ = model.get_feed_data(data, full_batch=full_batch)
                 t0 = time.clock()
                 step, summaries, loss, _ = s.run([
                     model.global_step,
