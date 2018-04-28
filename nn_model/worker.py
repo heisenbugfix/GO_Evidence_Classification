@@ -124,6 +124,7 @@ def train_test(configuration):
                 ], fd)
                 td = time.clock() - t0
                 logger.info("STEP: %7d | Loss: %.8f  | Time: %f" % (step, loss, td))
+                print("STEP: %7d | Loss: %.8f  | Time: %f" % (step, loss, td))
                 if configuration["dump_log"]:
                     summary_writer.add_summary(summaries, global_step=step)
 
