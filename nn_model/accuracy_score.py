@@ -9,7 +9,7 @@ from sklearn.metrics import precision_score
 
 class model_evaluation:
 
-	def __init__(self,y_true,y_pred):
+	def __init__(self,y_true,y_pred=None):
 		
 		self.num_samples = y_true.shape[0]
 		self.num_class = y_true.shape[1]
