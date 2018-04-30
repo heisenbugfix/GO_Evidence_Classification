@@ -3,6 +3,7 @@ import json
 import time
 import logging
 import pickle as pkl
+from accuracy_score import model_evaluation
 
 
 def HAN_model_1(session, config, logger, restore=False):
@@ -142,6 +143,13 @@ def train_test(configuration):
             sigmoids = s.run(model.prediction, fd)
             predictions = sigmoids > 0.5
             y_pred = predictions.astype(int)
+            evaluator = model_evaluation(y_true)
+            acc = evaluator.compute_accuracy_score(y_true, y_pred)
+            print("ACCURACY OF THE MODEL IS %f",acc)
+            logger.info("ACCURACY OF THE MODEL IS %f",acc)
+            f1_mac, f1_mic, f1_weighted, precision, recall = evaluator.binary_class_model(y_true, y_pred)
+            print("f1_mac:%0.4f , f1_mic:%0.4f , f1_weighted:%0.4f , precision:%0.4f , recall:%0.4f"%(f1_mac, f1_mic, f1_weighted, precision, recall))
+            logger.info("f1_mac:%0.4f , f1_mic:%0.4f , f1_weighted:%0.4f , precision:%0.4f , recall:%0.4f"%(f1_mac, f1_mic, f1_weighted, precision, recall))
             # print(y_pred, y_true)
             # calculate precision recall f1
 
