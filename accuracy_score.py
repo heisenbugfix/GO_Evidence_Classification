@@ -43,14 +43,18 @@ class model_evaluation:
 		return f1_mac, f1_mic, f1_weighted, precision, recall
 
 
-
+'''
 path = "/Users/nehachoudhary/Documents/Oracle_Lab"
 with open("label_example.pickle", 'rb') as f:
         label = pickle.load(f)
-
+	
 y_true = label[0] 
 y_pred = label[1] 
+'''
 
+#calling Model Eval
+
+'''
 eval = model_evaluation(y_true,y_pred)
 
 accuracy_score = eval.compute_accuracy_score(y_true, y_pred)
@@ -65,6 +69,6 @@ with open('accuracy_score.pickle', 'wb') as handle:
 with open('Model_metrics.pickle', 'wb') as handle:
 	pickle.dump(Model_metrics, handle, protocol=pickle.HIGHEST_PROTOCOL)
 
-
+'''
 
 
