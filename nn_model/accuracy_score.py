@@ -19,9 +19,8 @@ class model_evaluation:
 		val[y_true == y_pred] = 1
 		val[y_true == 0] = 0
 		accuracy_score =  np.sum(val, axis=1)/self.num_class 
-		print(accuracy_score)
-		
-		return accuracy_score
+		#print(accuracy_score)
+		return float(np.sum(accuracy_score)/self.num_samples)
 
 	def binary_class_model(self, y_true, y_pred ):
 
