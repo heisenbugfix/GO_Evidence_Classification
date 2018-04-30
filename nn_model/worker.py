@@ -140,7 +140,9 @@ def train_test(configuration):
                 data = pkl.load(f)
             logger.info("Loaded Test Data")
             fd, y_true = model.get_feed_data(data, is_training=False, full_batch=True)
+            print("CALCUALTED TRUE")
             sigmoids = s.run(model.prediction, fd)
+            print("CALCUALTED PRED")
             predictions = sigmoids > 0.5
             y_pred = predictions.astype(int)
             evaluator = model_evaluation(y_true)
