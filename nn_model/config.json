@@ -1,13 +1,13 @@
 {
   "epochs":1000,
   "is_training":true,
-  "full_batch" : true,
-  "batch_size" : 20,
-  "train_data_path":"/home/ttanna/GO_NEW/GO_Evidence_Classification/feature_data_split/train.pkl",
-  "test_data_path":"/home/ttanna/GO_NEW/GO_Evidence_Classification/feature_data_split/test.pkl",
-  "w_emb_path": "/home/ttanna/GO_NEW/GO_Evidence_Classification/feature_data_split/embedding.pkl",
-  "checkpoint_dir":"/mnt/nfs/work1/696ds-s18/ttanna/checkpoints2/",
-  "tflog_dir":"/mnt/nfs/work1/696ds-s18/ttanna/tflogs2/",
+  "full_batch" : false,
+  "batch_size" : 90000,
+  "train_data_path":"/mnt/nfs/work1/696ds-s18/aranjan/feature_data_split/train.pkl",
+  "test_data_path":"/mnt/nfs/work1/696ds-s18/aranjan/feature_data_split/test.pkl",
+  "w_emb_path": "/mnt/nfs/work1/696ds-s18/aranjan/feature_data_split/embedding.pkl",
+  "checkpoint_dir":"/mnt/nfs/work1/696ds-s18/aranjan/checkpoints/",
+  "tflog_dir":"/mnt/nfs/work1/696ds-s18/aranjan/tflogs/",
   "vocab_size":74248,
   "embedding_size":200,
   "go_size":44922,
@@ -20,7 +20,7 @@
   "max_grad_norm":5.0,
   "dropout_keep_prob":0.5,
   "dump_log":false,
-  "dump_after_every_x_epochs":5,
-  "train_log_filename":"/mnt/nfs/work1/696ds-s18/ttanna/tflogs2/log_train.txt",
-  "test_log_filename":"/mnt/nfs/work1/696ds-s18/ttanna/tflogs2/log_test.txt"
+  "dump_after_every_x_epochs":1,
+  "train_log_filename":"/mnt/nfs/work1/696ds-s18/aranjan/tflogs/log_train.txt",
+  "test_log_filename":"/mnt/nfs/work1/696ds-s18/aranjan/tflogs/log_test.txt"
 }
