@@ -1,7 +1,7 @@
 {
   "epochs":1000,
-  "is_training":true,
-  "full_batch" : false,
+  "is_training":false,
+  "full_batch" : true,
   "batch_size" : 90000,
   "train_data_path":"/mnt/nfs/work1/696ds-s18/aranjan/feature_data_split/train.pkl",
   "test_data_path":"/mnt/nfs/work1/696ds-s18/aranjan/feature_data_split/test.pkl",
