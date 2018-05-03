@@ -17,7 +17,7 @@ class model_evaluation:
 	def compute_accuracy_score(self, y_true, y_pred):
 		val = np.zeros((self.num_samples,self.num_class))
 		val[y_true == y_pred] = 1
-		val[y_true == 0] = 0
+		#val[y_true == 0] = 0
 		accuracy_score =  np.sum(val, axis=1)/self.num_class 
 		#print(accuracy_score)
 		return float(np.sum(accuracy_score)/self.num_samples)
