@@ -1,6 +1,7 @@
 import tensorflow as tf
 import random
 import tensorflow.contrib.layers as layers
+import math
 from model_components import task_specific_attention, bidirectional_rnn
 
 
@@ -209,6 +210,34 @@ class HANClassifierModel():
         else:
             return fd, labels
 
+    def get_feed_data_for_test(self, data, max_batchsize=40000):
+        data_len = len(data['abstract'])
+        splits = int(math.ceil(data_len/max_batchsize))
+        inputs = data['abstract']
+        sentence_lengths = data["doc_len"]
+        word_lengths = data["sent_len"]
+        go_inputs = data["go_inputs"]
+        labels = data["label"]
+        aspect = data["aspect"]
+        data_list = []
+        for i in range(splits):
+            dic = {}
+            if i < splits-1:
+                dic['abstract'] = inputs[i*max_batchsize: (i+1)*max_batchsize]
+                dic['doc_len'] = sentence_lengths[i*max_batchsize: (i+1)*max_batchsize]
+                dic["sent_len"] = word_lengths[i*max_batchsize: (i+1)*max_batchsize]
+                dic["go_inputs"] = go_inputs[i*max_batchsize: (i+1)*max_batchsize]
+                dic["label"] = labels[i*max_batchsize: (i+1)*max_batchsize]
+                dic["aspect"] = aspect[i*max_batchsize: (i+1)*max_batchsize]
+            else:
+                dic['abstract'] = inputs[i*max_batchsize: ]
+                dic['doc_len'] = sentence_lengths[i*max_batchsize: ]
+                dic["sent_len"] = word_lengths[i*max_batchsize: ]
+                dic["go_inputs"] = go_inputs[i*max_batchsize: ]
+                dic["label"] = labels[i*max_batchsize: ]
+                dic["aspect"] = aspect[i*max_batchsize: ]
+            data_list.append(dic)
+        return data_list
 
 if __name__ == '__main__':
     try:
