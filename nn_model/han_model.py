@@ -244,16 +244,16 @@ class HANClassifierModel():
                 data_list.append([dic, labels[i * max_batchsize: ]])
         return data_list
 
-    def get_feed_data_test_2(self,data,max_batchsize=40000)
-        n=len(data)/3
-        i=iter(data.items())
-        d1=dict(itertools.islice(i,n))
-        d1=dict(itertools.islice(i,n))
-        d2=dict(i)  
-        l1=d1['label']
-        l2=d2['label']
-        l3=d3['label']
-        return [[d1,l1],[d2,l2],[d3,l3]]      
+    # def get_feed_data_test_2(self,data,max_batchsize=40000)
+    #     n=len(data)/3
+    #     i=iter(data.items())
+    #     d1=dict(itertools.islice(i,n))
+    #     d1=dict(itertools.islice(i,n))
+    #     d2=dict(i)
+    #     l1=d1['label']
+    #     l2=d2['label']
+    #     l3=d3['label']
+    #     return [[d1,l1],[d2,l2],[d3,l3]]
 
 
 
