@@ -3,6 +3,8 @@ import random
 import tensorflow.contrib.layers as layers
 import math
 from model_components import task_specific_attention, bidirectional_rnn
+import itertools
+
 
 
 class HANClassifierModel():
@@ -210,6 +212,9 @@ class HANClassifierModel():
         else:
             return fd, labels
 
+
+
+
     def get_feed_data_for_test(self, data, max_batchsize=40000):
         data_len = len(data['abstract'])
         splits = int(math.ceil(data_len/max_batchsize))
@@ -238,6 +243,19 @@ class HANClassifierModel():
                 dic["aspect"] = aspect[i*max_batchsize: ]
                 data_list.append([dic, labels[i * max_batchsize: ]])
         return data_list
+
+    def get_feed_data_test_2(self,data,max_batchsize=40000)
+        n=len(data)/3
+        i=iter(data.items())
+        d1=dict(itertools.islice(i,n))
+        d1=dict(itertools.islice(i,n))
+        d2=dict(i)  
+        l1=d1['label']
+        l2=d2['label']
+        l3=d3['label']
+        return [[d1,l1],[d2,l2],[d3,l3]]      
+
+
 
 if __name__ == '__main__':
     try:
@@ -290,4 +308,5 @@ if __name__ == '__main__':
         predictions = sigmoids > 0.5
         print(predictions.astype(float))
         print(session.run([model.train_op, model.loss], fd))
+
 
