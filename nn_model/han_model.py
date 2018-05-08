@@ -227,16 +227,16 @@ class HANClassifierModel():
                 dic['doc_len'] = sentence_lengths[i*max_batchsize: (i+1)*max_batchsize]
                 dic["sent_len"] = word_lengths[i*max_batchsize: (i+1)*max_batchsize]
                 dic["go_inputs"] = go_inputs[i*max_batchsize: (i+1)*max_batchsize]
-                dic["label"] = labels[i*max_batchsize: (i+1)*max_batchsize]
                 dic["aspect"] = aspect[i*max_batchsize: (i+1)*max_batchsize]
+                data_list.append([dic,labels[i*max_batchsize: (i+1)*max_batchsize]])
             else:
                 dic['abstract'] = inputs[i*max_batchsize: ]
                 dic['doc_len'] = sentence_lengths[i*max_batchsize: ]
                 dic["sent_len"] = word_lengths[i*max_batchsize: ]
                 dic["go_inputs"] = go_inputs[i*max_batchsize: ]
-                dic["label"] = labels[i*max_batchsize: ]
+                # dic["label"] = labels[i*max_batchsize: ]
                 dic["aspect"] = aspect[i*max_batchsize: ]
-            data_list.append(dic)
+                data_list.append([dic, labels[i * max_batchsize: ]])
         return data_list
 
 if __name__ == '__main__':

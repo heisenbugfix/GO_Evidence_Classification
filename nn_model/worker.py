@@ -1,4 +1,5 @@
 import tensorflow as tf
+import numpy as np
 import json
 import time
 import logging
@@ -48,8 +49,10 @@ def HAN_model_1(session, config, logger, restore=False):
 
     saver = tf.train.Saver(tf.global_variables())
     checkpoint = tf.train.get_checkpoint_state(config["checkpoint_dir"])
+    print(checkpoint)
     if checkpoint and not config["is_training"]:
         print("Reading model parameters from %s" % checkpoint.model_checkpoint_path)
+        logger.info("Reading model parameters from",checkpoint.model_checkpoint_path)
         saver.restore(session, checkpoint.model_checkpoint_path)
     else:
         print("Created model with fresh parameters")
@@ -139,19 +142,61 @@ def train_test(configuration):
             with open(configuration["test_data_path"], 'rb') as f:
                 data = pkl.load(f)
             logger.info("Loaded Test Data")
-            fd, y_true = model.get_feed_data(data, is_training=False, full_batch=True)
+            test_data = model.get_feed_data_for_test(data, max_batchsize=1000)
             print("CALCUALTED TRUE")
-            sigmoids = s.run(model.prediction, fd)
-            print("CALCUALTED PRED")
-            predictions = sigmoids > 0.5
-            y_pred = predictions.astype(int)
-            evaluator = model_evaluation(y_true)
-            acc = evaluator.compute_accuracy_score(y_true, y_pred)
+            curr_true = None
+            curr_pred = None
+            for i in range(len(test_data)):
+                logger.info("Loaded Test Data")
+                fd, y_true = test_data[i][0], test_data[i][1]
+                #creating feeddict:
+                feed_d = {}
+                feed_d = {model.inputs:fd["abstract"],
+                          model.sentence_lengths:fd['doc_len'],
+                          model.word_lengths:fd["sent_len"],
+                          model.go_inputs:fd["go_inputs"],
+                          model.aspect:fd["aspect"],
+                          model.is_training:False
+                          }
+                sigmoids = s.run(model.prediction, feed_d)
+                print("CALCUALTED PRED")
+                predictions = sigmoids > 0.5
+                y_pred = predictions.astype(int)
+                if curr_true is None:
+                    curr_true = y_true
+                else:
+                    curr_true = np.vstack((curr_true,y_true))
+                if curr_pred is None:
+                    curr_pred = y_pred
+                else:
+                    curr_pred = np.vstack((curr_pred,y_pred))
+            evaluator = model_evaluation(curr_true)
+            acc = evaluator.compute_accuracy_score(curr_true, curr_pred)
             print("ACCURACY OF THE MODEL IS %f",acc)
             logger.info("ACCURACY OF THE MODEL IS %f",acc)
-            f1_mac, f1_mic, f1_weighted, precision, recall = evaluator.binary_class_model(y_true, y_pred)
-            print("f1_mac:%0.4f , f1_mic:%0.4f , f1_weighted:%0.4f , precision:%0.4f , recall:%0.4f"%(f1_mac, f1_mic, f1_weighted, precision, recall))
-            logger.info("f1_mac:%0.4f , f1_mic:%0.4f , f1_weighted:%0.4f , precision:%0.4f , recall:%0.4f"%(f1_mac, f1_mic, f1_weighted, precision, recall))
+            f1_mac, f1_mic, f1_weighted, precision, recall = evaluator.binary_class_model(curr_true, curr_pred)
+            print("f1_macro : ",f1_mac)
+            print("###############################")
+            print("f1_micro     :", f1_mic)
+            print("###############################")
+            print("f1_weighted     :", f1_weighted)
+            print("###############################")
+            print("precision     :", precision)
+            print("###############################")
+            print("recall     :", recall)
+            print("###############################")
+
+            logger.info("f1_macro : ", str(f1_mac))
+            logger.info("###############################")
+            logger.info("f1_micro     :", str(f1_mic))
+            logger.info("###############################")
+            logger.info("f1_weighted     :", str(f1_weighted))
+            logger.info("###############################")
+            logger.info("precision     :", str(precision))
+            logger.info("###############################")
+            logger.info("recall     :", str(recall))
+            logger.info("###############################")
+
             # print(y_pred, y_true)
             # calculate precision recall f1
 
