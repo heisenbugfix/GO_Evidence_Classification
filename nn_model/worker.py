@@ -170,6 +170,10 @@ def train_test(configuration):
                     curr_pred = y_pred
                 else:
                     curr_pred = np.vstack((curr_pred,y_pred))
+            #dumping the predicted data
+            if configuration["dump_eval"]:
+                with open("predict_data.pkl",'wb') as f:
+                    pkl.dump([curr_true,curr_pred],f)
             evaluator = model_evaluation(curr_true)
             acc = evaluator.compute_accuracy_score(curr_true, curr_pred)
             print("ACCURACY OF THE MODEL IS %f",acc)
