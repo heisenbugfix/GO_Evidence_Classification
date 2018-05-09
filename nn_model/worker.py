@@ -52,7 +52,6 @@ def HAN_model_1(session, config, logger, restore=False):
     print(checkpoint)
     if checkpoint and not config["is_training"]:
         print("Reading model parameters from %s" % checkpoint.model_checkpoint_path)
-        logger.info("Reading model parameters from",checkpoint.model_checkpoint_path)
         saver.restore(session, checkpoint.model_checkpoint_path)
     else:
         print("Created model with fresh parameters")
